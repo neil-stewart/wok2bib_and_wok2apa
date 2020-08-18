@@ -66,9 +66,10 @@ volume = {47},
 pages = {973--978},
 custom = {e},
 }
+
 $ cat savedrecs.txt | wok2apa
-Zarkadi, T., Wade, K. A., & Stewart, N. (2009). Creating fair lineups for suspects with distinctive features. Psychological Science, 20, 1448-1453. Reimers, S., Maylor, E. A., Stewart, N., & Chater, N. (2009).
-Associations between a one-shot delay discounting measure and age, income, education and real-world impulsive behavior. Personality and Individual Differences, 47, 973-978.
+Zarkadi, T., Wade, K. A., & Stewart, N. (2009). Creating fair lineups for suspects with distinctive features. Psychological Science, 20, 1448-1453. 
+Reimers, S., Maylor, E. A., Stewart, N., & Chater, N. (2009). Associations between a one-shot delay discounting measure and age, income, education and real-world impulsive behavior. Personality and Individual Differences, 47, 973-978.
 ```
 
 # Options
@@ -86,3 +87,4 @@ I've tested wok2apa and wok2bib on a set of about 30 references, but if you find
 # How to get records from Web of Knowledge
 
 ![wok_screenshot.png](wok_screenshot.png)
+
