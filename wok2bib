@@ -1,0 +1,164 @@
+#!/usr/bin/perl -w 
+# Convert an Web of Knowledge formatted reference to a bibtex entry
+# Version 1.0.2
+# Copyright 2011 Neil Stewart
+# The program is distributed under the terms of the GNU General Public License
+#
+# wok2bib is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# wok2bib is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# <http://www.gnu.org/licenses/>
+#
+# Usage ./wok2bib < savedrecs.txt > bibtex_records.bib
+#
+# Version history
+# 1.0.2 Fix ininitialised use of $inauthor and $intitle
+#       Change proper case titles into sentence case titles
+
+$inauthor=0;
+$intitle=0;
+while ( defined( my $line = <STDIN> ) ) {
+    chomp($line);
+
+    # Fill the array @allauthors
+    if( $line =~ /^AU (.+)/ ) {
+      $author = $1;
+      @allauthors = ();
+      push(@allauthors, $author);
+      $inauthor = 1;
+    } elsif ( $line =~ /^[A-Z]/ ) {
+      # Not on an author line any more
+      $inauthor = 0;
+    } elsif ( $line =~ /^   (.+)/ & $inauthor ) {
+      # Still in the authors section
+      $author = $1;
+      push(@allauthors, $author);
+    }
+
+    # Publication year
+    if( $line =~ /^PY (.+)/ ) {
+      $year = $1;
+    }
+
+    # Title
+    if( $line =~ /^TI (.+)/ ) {
+      $title = $1;
+      $intitle = 1;
+    } elsif ( $line =~ /^[A-Z]/ ) {
+      # Not on a title line any more
+      $intitle = 0;
+    } elsif ( $line =~ /^  (.+)/ & $intitle ) {
+      # Still in the title section
+      $moretitle = $1;
+      $title = join(' ', $title, $moretitle);
+    }
+    
+    # Journal
+    if( $line =~ /^SO (.+)/ ) {
+      $journal = $1;
+      # Convert to sentence case
+      $journal = lc($journal);
+      $journal =~ s/\b(\w)(\w*)\b/\u$1$2/g;
+      # Convert - in name to :
+      $journal =~ s/-/: /g;
+      # Replace And, Of, ... with and, of, ...
+      $journal =~ s/\bOf\b/of/g;
+      $journal =~ s/\bAnd\b/and/g;
+      $journal =~ s/\bOr\b/or/g;
+      $journal =~ s/\bThe\b/the/g;
+    }
+
+    # Volume
+    if( $line =~ /^VL (.+)/ ) {
+      $volume = $1;
+    }
+
+    # Pages
+    if( $line =~ /^BP (.+)/ ) {
+      $startpage = $1;
+    }
+    if( $line =~ /^EP (.+)/ ) {
+      $endpage = $1;
+    }
+
+    # DOI
+    if( $line =~ /^DI (.+)/ ) {
+      $doi = $1;
+    }
+
+    # Reached end of record, so print bib entry
+    if( $line =~ /^ER/ ) {
+      # Make surnames sentence case before the comma if they are upper case
+      if( $allauthors[0] eq uc($allauthors[0]) ) {
+        foreach $i (@allauthors) {
+          $i = lc($i);
+          $i =~ s/\b(\w)(\w*)\b/\u$1$2/g; # Sentence case
+          $i =~ s/, (.+)/, \U$1/; # Capitalise initials after comma
+        }
+      }
+      # Put dots and spaces after initials, then separate authors with 'and'
+      foreach $i (@allauthors) {
+        $i =~ s/([A-Z])([A-Z])/$1. $2/g;
+        $i =~ s/([A-Z])([A-Z])/$1. $2/g;
+        $i =~ s/([A-Z])$/$1./;
+      }
+      $allauthorsfield = join(' and ', @allauthors);
+
+      # My way of naming bibtex records. Subsitiute your own
+      # Make surnames only list
+      @allsurnames=@allauthors;
+      foreach $i (@allsurnames) {
+        $i =~ s/, .+//;
+      }
+      $surnames = join('', @allsurnames);
+      $surnames =~ s/ //g;
+      # Take last two digits from year
+      $lasttwodigitsofyear = substr($year, 2, 2);
+      $id = $surnames . $lasttwodigitsofyear;
+
+      # More processing of title
+      # Make ' - ' into ': '
+      $title =~ s/ - /: /;      
+      # Make title sentence case if it is all upper case
+      if( $title eq uc($title) ) {
+        # Make lower case---WOK has early records in CAPS
+        $title = lc($title);
+        # First letter and letters after a ': ' to capital
+        $title =~ s/^([a-z])/\u$1/;
+        $title =~ s/: ([a-z])/: \u$1/;
+      }
+      # Make title sentence case if it is title case
+      if($title eq &properCase($title)) {
+        $title =lc($title); # All lower
+        $title = ucfirst($title); # Capitalise first letter
+        $title =~ s/([.?:]) (\w)/$1 \u$2/g; # Capitalise letters after .?:
+      }
+      # Replace double spaces
+      $title =~ s/  / /g;
+
+      # Print bib entry
+      print "\@article{$id,\n";
+      print "author\t=\t{$allauthorsfield},\n";
+      print "year\t=\t{$year},\n";
+      print "title\t=\t{$title},\n";
+      print "journal\t=\t{$journal},\n";
+      print "volume\t=\t{$volume},\n";
+      print "pages\t=\t{$startpage--$endpage},\n";
+      print "doi\t=\t{$doi},\n";
+      print "custom\t=\t{e},\n";
+      print "}\n\n";
+    }
+}
+
+sub properCase {
+  my $x = $_[0];  
+  $x =~ s/(\w+)/\u\L$1/g;
+  $x
+}
