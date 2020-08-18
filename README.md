@@ -3,7 +3,7 @@
 wok2bib is a command line utility for converting Web of Knowledge or Web of Science saved records into bibtex references for use with latex. wok2apa converts records to plain text APA format. Both are written in perl. Here is an example of wok2bib and wok2apa at work:
 
 ```bash
- cat savedrecs.txt
+$ cat savedrecs.txt
 PT J
 AU Zarkadi, T
 Wade, KA
@@ -85,4 +85,4 @@ I've tested wok2apa and wok2bib on a set of about 30 references, but if you find
 
 # How to get records from Web of Knowledge
 
-![wok_screenshot.png](WoK_screenshot.png)
+![wok_screenshot.png](wok_screenshot.png)
